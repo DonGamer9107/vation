@@ -1,0 +1,7 @@
+{
+  "name": "Gemini AI Multi-Tool Suite",
+  "description": "A comprehensive web application showcasing a wide range of Gemini API capabilities, including image and video generation, editing, analysis, chat, search grounding, complex reasoning, audio transcription, text-to-speech, live conversation, and document content generation.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
