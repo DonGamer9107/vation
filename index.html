@@ -3,9 +3,8 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AI Multi-Tool Suite</title>
+    <title>AI Productivity Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -13,37 +12,32 @@
           extend: {
             colors: {
               'primary-blue': '#1a73e8',
-              'app-dark': '#202124',
-              'app-light': '#f8f9fa',
-              'app-grey': '#5f6368',
-              'app-bg': '#1e1f22'
+              'app-dark': '#131314',
+              'app-card': '#1e1f20',
+              'app-border': '#333537',
+              'app-text': '#e3e3e3'
             }
           }
         }
       }
     </script>
     <style>
-      @keyframes slide {
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+      body { font-family: 'Inter', sans-serif; background-color: #131314; color: #e3e3e3; }
+      @keyframes shimmer {
         0% { transform: translateX(-100%); }
-        100% { transform: translateX(400%); }
+        100% { transform: translateX(100%); }
       }
-      .animate-slide {
-        animation: slide 2s ease-in-out infinite;
+      .shimmer { position: relative; overflow: hidden; }
+      .shimmer::after {
+        content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        animation: shimmer 2s infinite;
       }
-      /* Custom scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: #1e1f22;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #3c4043;
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #5f6368;
-      }
+      ::-webkit-scrollbar { width: 6px; }
+      ::-webkit-scrollbar-track { background: #131314; }
+      ::-webkit-scrollbar-thumb { background: #333537; border-radius: 10px; }
+      ::-webkit-scrollbar-thumb:hover { background: #444746; }
     </style>
   <script type="importmap">
 {
@@ -57,7 +51,7 @@
 }
 </script>
 </head>
-  <body class="bg-[#1e1f22] text-[#f8f9fa]">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
