@@ -1,8 +1,7 @@
 {
   "name": "AI Productivity Suite",
-  "description": "Comprehensive AI suite for generating media, documents, and interactive reasoning.",
+  "description": "A powerful AI-driven platform for image generation, office document creation (PDF, Word, Excel, PPT), text conversion, and advanced content analysis using latest models.",
   "requestFramePermissions": [
-    "camera",
     "microphone"
   ]
 }

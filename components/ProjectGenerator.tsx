@@ -4,7 +4,7 @@ import { GoogleGenAI, Type } from '@google/genai';
 import ApiKeySelector from './common/ApiKeySelector';
 import Spinner from './common/Spinner';
 import { decode, createWavBlob } from '../utils/helpers';
-import { DocumentArrowDownIcon, SparklesIcon } from '@heroicons/react/24/solid';
+import { DocumentArrowDownIcon } from '@heroicons/react/24/solid';
 
 interface Slide {
   title: string;
@@ -21,7 +21,7 @@ interface GeneratedContent {
 }
 
 const ProjectGenerator: React.FC = () => {
-    const [topic, setTopic] = useState<string>('Artificial Intelligence in Medicine');
+    const [topic, setTopic] = useState<string>('The Future of Renewable Energy');
     const [loading, setLoading] = useState<boolean>(false);
     const [loadingStage, setLoadingStage] = useState<string>('');
     const [error, setError] = useState<string | null>(null);
@@ -31,24 +31,24 @@ const ProjectGenerator: React.FC = () => {
     const projectPlanSchema = {
         type: Type.OBJECT,
         properties: {
-            projectTitle: { type: Type.STRING },
+            projectTitle: { type: Type.STRING, description: 'A catchy title for the project or presentation.' },
             slides: {
-                type: Type.ARRAY, items: {
+                type: Type.ARRAY, description: 'An array of 5 slide objects for a presentation.', items: {
                     type: Type.OBJECT, properties: {
-                        title: { type: Type.STRING },
-                        points: { type: Type.ARRAY, items: { type: Type.STRING } }
+                        title: { type: Type.STRING, description: 'The title of the slide.' },
+                        points: { type: Type.ARRAY, items: { type: Type.STRING }, description: 'An array of key bullet points for the slide.' }
                     }, required: ['title', 'points']
                 }
             },
-            speechScript: { type: Type.STRING },
-            imagePrompts: { type: Type.ARRAY, items: { type: Type.STRING } },
-            videoPrompt: { type: Type.STRING }
+            speechScript: { type: Type.STRING, description: 'A detailed speech script that corresponds to the presentation slides.' },
+            imagePrompts: { type: Type.ARRAY, description: 'An array of 4 diverse, detailed prompts for an image generation model to create visuals for the presentation.', items: { type: Type.STRING } },
+            videoPrompt: { type: Type.STRING, description: 'A single, detailed prompt for a video generation model to create an introductory or summary video.' }
         }, required: ['projectTitle', 'slides', 'speechScript', 'imagePrompts', 'videoPrompt']
     };
 
     const handleGenerate = useCallback(async () => {
         if (!topic) { setError('Please enter a topic.'); return; }
-        if (!isApiKeySelected) { setError('Please select an API key to enable video features.'); return; }
+        if (!isApiKeySelected) { setError('Video generation requires an API key. Please select one to proceed.'); return; }
 
         setLoading(true);
         setError(null);
@@ -57,17 +57,17 @@ const ProjectGenerator: React.FC = () => {
         try {
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
-            setLoadingStage('Planning project structure...');
+            setLoadingStage('1/5: Creating project plan and script...');
             const planResponse = await ai.models.generateContent({
                 model: 'gemini-2.5-pro',
-                contents: `Create a comprehensive project presentation about "${topic}". Include title, content for 5 slides, a full speech script, 4 detailed image prompts, and 1 video generation prompt.`,
+                contents: `Create a comprehensive project plan about "${topic}". This should include a presentation title, content for 5 slides, a speech script, 4 image prompts, and 1 video prompt.`,
                 config: { responseMimeType: 'application/json', responseSchema: projectPlanSchema }
             });
             const plan = JSON.parse(planResponse.text);
 
             setContent({ projectTitle: plan.projectTitle, slides: plan.slides, speechScript: plan.speechScript, imageUrls: [] });
 
-            setLoadingStage('Generating cinematic images...');
+            setLoadingStage('2/5: Generating images...');
             const imagePromises = plan.imagePrompts.slice(0, 4).map((p: string) => 
                 ai.models.generateImages({ model: 'imagen-4.0-generate-001', prompt: p, config: { numberOfImages: 1, aspectRatio: '16:9' } })
             );
@@ -75,7 +75,7 @@ const ProjectGenerator: React.FC = () => {
             const imageUrls = imageResults.map(res => `data:image/jpeg;base64,${res.generatedImages[0].image.imageBytes}`);
             setContent(prev => prev ? { ...prev, imageUrls } : null);
 
-            setLoadingStage('Synthesizing speech track...');
+            setLoadingStage('3/5: Generating speech...');
             const ttsResponse = await ai.models.generateContent({
                 model: "gemini-2.5-flash-preview-tts",
                 contents: [{ parts: [{ text: plan.speechScript }] }],
@@ -88,14 +88,14 @@ const ProjectGenerator: React.FC = () => {
                 setContent(prev => prev ? { ...prev, speechAudioUrl: URL.createObjectURL(wavBlob) } : null);
             }
 
-            setLoadingStage('Creating introductory video...');
+            setLoadingStage('4/5: Generating video (this may take a few minutes)...');
             let operation = await ai.models.generateVideos({
                 model: 'veo-3.1-fast-generate-preview',
                 prompt: plan.videoPrompt,
                 config: { numberOfVideos: 1, resolution: '720p', aspectRatio: '16:9' }
             });
             while (!operation.done) {
-                await new Promise(resolve => setTimeout(resolve, 8000));
+                await new Promise(resolve => setTimeout(resolve, 10000));
                 operation = await ai.operations.getVideosOperation({ operation });
             }
             const downloadLink = operation.response?.generatedVideos?.[0]?.video?.uri;
@@ -105,10 +105,12 @@ const ProjectGenerator: React.FC = () => {
                 setContent(prev => prev ? { ...prev, videoUrl: URL.createObjectURL(videoBlob) } : null);
             }
 
-            setLoadingStage('Finalizing...');
+            setLoadingStage('5/5: Project complete!');
         } catch (e) {
-            setError(`Error: ${(e as Error).message}`);
-            if ((e as Error).message.includes("entity was not found")) {
+            const msg = (e as Error).message;
+            setError(`An error occurred: ${msg}`);
+            if (msg.includes("Requested entity was not found")) {
+                 setError("API key error during video generation. Please select a valid key.");
                  setIsApiKeySelected(false);
             }
         } finally {
@@ -116,117 +118,47 @@ const ProjectGenerator: React.FC = () => {
             setLoadingStage('');
         }
     }, [topic, isApiKeySelected]);
+    
+    const handleDownloadJson = () => {
+        if (!content) return;
+        const blob = new Blob([JSON.stringify({ title: content.projectTitle, slides: content.slides }, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${content.projectTitle.replace(/\s/g, '_')}_presentation.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
 
     return (
-        <div className="space-y-8">
-            <div className="flex items-center gap-4">
-                <SparklesIcon className="h-10 w-10 text-blue-400" />
-                <div>
-                    <h2 className="text-3xl font-black text-white">Project Creator</h2>
-                    <p className="text-gray-400">Generate full presentations with slides, speech, images, and video instantly.</p>
-                </div>
+        <div className="space-y-6">
+            <div>
+                <h2 className="text-2xl font-bold tracking-tight text-white">Project Generator</h2>
+                <p className="mt-1 text-sm text-gray-400">Enter a topic to automatically generate a presentation, speech, video, and images.</p>
             </div>
-
             <ApiKeySelector onKeySelected={useCallback(() => { setIsApiKeySelected(true); setError(null); }, [])} />
-
-            <div className={`bg-gray-900/60 p-8 rounded-3xl border border-gray-800 space-y-6 shadow-xl ${!isApiKeySelected ? 'opacity-40 grayscale pointer-events-none' : ''}`}>
+            <div className={`space-y-4 ${!isApiKeySelected ? 'opacity-50 pointer-events-none' : ''}`}>
                 <div>
-                    <label className="block text-sm font-bold text-gray-500 uppercase tracking-widest mb-3">What's your topic?</label>
-                    <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} className="w-full bg-gray-950 border border-gray-800 rounded-2xl p-4 text-white focus:ring-2 focus:ring-blue-500 outline-none text-xl font-bold transition-all" placeholder="e.g., Space Exploration" disabled={loading} />
+                    <label htmlFor="topic-input" className="block text-sm font-medium leading-6 text-gray-300">Project Topic</label>
+                    <input id="topic-input" type="text" value={topic} onChange={(e) => setTopic(e.target.value)} className="mt-2 block w-full rounded-md border-0 bg-white/5 p-2.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-gemini-blue sm:text-sm" placeholder="e.g., The History of Ancient Rome" disabled={loading} />
                 </div>
-                <button onClick={handleGenerate} disabled={loading || !topic.trim() || !isApiKeySelected} className="w-full bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-2xl active:scale-95 uppercase tracking-widest">
-                    {loading ? <Spinner /> : <SparklesIcon className="h-6 w-6" />}
-                    {loading ? 'Processing...' : 'Generate Full Project'}
+                <button onClick={handleGenerate} disabled={loading || !topic.trim() || !isApiKeySelected} className="inline-flex items-center justify-center rounded-md bg-gemini-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 disabled:opacity-50">
+                    {loading ? <><Spinner /> Generating...</> : 'Generate Project'}
                 </button>
             </div>
             
-            {error && <div className="p-4 bg-red-900/20 border border-red-900/50 text-red-300 rounded-2xl text-center">{error}</div>}
+            {error && <div className="rounded-md bg-red-900/50 p-4 text-sm text-red-300">{error}</div>}
+            {loading && <div className="text-center p-4 bg-gray-800 rounded-lg"><p className="text-lg font-semibold text-gray-300">{loadingStage}</p><div className="w-full bg-gray-700 rounded-full h-2.5 mt-4 overflow-hidden"><div className="bg-gemini-blue h-2.5 w-1/4 animate-[slide_2s_ease-in-out_infinite]"></div></div></div>}
             
-            {loading && (
-              <div className="text-center p-8 bg-gray-900/40 rounded-3xl border border-gray-800 animate-pulse">
-                <p className="text-2xl font-black text-blue-400 mb-6 uppercase tracking-tighter">{loadingStage}</p>
-                <div className="w-full bg-gray-950 rounded-full h-3 overflow-hidden">
-                    <div className="bg-blue-500 h-full w-full origin-left animate-slide"></div>
-                </div>
-                <p className="mt-4 text-gray-600 text-xs font-bold uppercase">Multimodal generation in progress</p>
-              </div>
-            )}
-            
-            {content && !loading && (
-              <div className="space-y-12 animate-fadeIn">
-                <div className="text-center py-10 border-b border-gray-800">
-                    <h3 className="text-5xl font-black text-white tracking-tighter mb-2">{content.projectTitle}</h3>
-                    <p className="text-blue-500 font-bold uppercase tracking-widest text-xs">AI Generated Campaign</p>
-                </div>
-
+            {content && !loading && <div className="space-y-8 pt-4 border-t border-gray-700">
+                <h3 className="text-3xl font-bold text-center text-white">{content.projectTitle}</h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div className="space-y-6">
-                        <h4 className="text-xl font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                           <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                           Slides
-                        </h4>
-                        <div className="space-y-4">
-                            {content.slides.map((slide, i) => (
-                                <div key={i} className="p-6 bg-gray-900/50 border border-gray-800 rounded-2xl hover:bg-gray-800/50 transition-colors shadow-sm">
-                                    <h5 className="font-black text-blue-400 mb-3">{i+1}. {slide.title}</h5>
-                                    <ul className="list-disc list-inside space-y-2 text-sm text-gray-400 leading-relaxed">
-                                        {slide.points.map((p, j) => <li key={j}>{p}</li>)}
-                                    </ul>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-6">
-                        <h4 className="text-xl font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                           <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                           Speech Script
-                        </h4>
-                        <div className="p-8 bg-gray-950 border border-gray-800 rounded-3xl space-y-6 shadow-inner">
-                            {content.speechAudioUrl && (
-                                <div className="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20">
-                                    <audio controls src={content.speechAudioUrl} className="w-full h-10"></audio>
-                                </div>
-                            )}
-                            <p className="text-base text-gray-300 whitespace-pre-wrap leading-loose italic font-serif">
-                               "{content.speechScript}"
-                            </p>
-                        </div>
-                    </div>
+                    <div className="space-y-4"><div className="flex justify-between items-center"><h4 className="text-xl font-semibold text-white">Presentation Slides</h4><button onClick={handleDownloadJson} className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-500"><DocumentArrowDownIcon className="h-4 w-4" />JSON</button></div><div className="p-4 bg-gray-800 rounded-lg space-y-4 max-h-96 overflow-y-auto">{content.slides.map((slide, i) => <div key={i} className="p-3 bg-gray-700/50 rounded"><h5 className="font-bold">{i+1}. {slide.title}</h5><ul className="list-disc list-inside text-sm text-gray-300 mt-1">{slide.points.map((p, j) => <li key={j}>{p}</li>)}</ul></div>)}</div></div>
+                    <div className="space-y-4"><div className="flex justify-between items-center"><h4 className="text-xl font-semibold text-white">Speech</h4>{content.speechAudioUrl && <a href={content.speechAudioUrl} download={`${content.projectTitle.replace(/\s/g, '_')}_speech.wav`} className="inline-flex items-center gap-2 rounded-md bg-gray-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-500"><DocumentArrowDownIcon className="h-4 w-4" />WAV</a>}</div><div className="p-4 bg-gray-800 rounded-lg space-y-2 max-h-96 overflow-y-auto">{content.speechAudioUrl && <audio controls src={content.speechAudioUrl} className="w-full"></audio>}<p className="text-sm text-gray-300 whitespace-pre-wrap">{content.speechScript}</p></div></div>
                 </div>
-
-                {content.videoUrl && (
-                    <div className="space-y-6">
-                        <h4 className="text-xl font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                           <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                           Promotional Video
-                        </h4>
-                        <video src={content.videoUrl} controls className="w-full rounded-3xl border border-gray-800 shadow-2xl bg-black aspect-video object-cover" />
-                    </div>
-                )}
-
-                {content.imageUrls.length > 0 && (
-                    <div className="space-y-6">
-                        <h4 className="text-xl font-bold text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                           <div className="w-1 h-6 bg-blue-500 rounded-full"></div>
-                           Key Visuals
-                        </h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            {content.imageUrls.map((url, i) => (
-                                <div key={i} className="group relative rounded-2xl overflow-hidden border border-gray-800 shadow-lg">
-                                    <img src={url} alt={`Visual ${i+1}`} className="w-full h-auto object-cover aspect-video group-hover:scale-110 transition-transform duration-700"/>
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
-                                        <a href={url} download={`Visual_${i+1}.jpg`} className="bg-white/10 backdrop-blur-md text-white p-2 rounded-xl border border-white/20 hover:bg-white/20 transition-all">
-                                           <DocumentArrowDownIcon className="h-6 w-6"/>
-                                        </a>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-              </div>
-            )}
+                {content.videoUrl && <div className="space-y-4"><h4 className="text-xl font-semibold text-white">Generated Video</h4><video src={content.videoUrl} controls autoPlay loop className="w-full rounded-lg border border-gray-700" /></div>}
+                {content.imageUrls.length > 0 && <div className="space-y-4"><h4 className="text-xl font-semibold text-white">Generated Images</h4><div className="grid grid-cols-2 md:grid-cols-4 gap-4">{content.imageUrls.map((url, i) => <div key={i} className="group relative"><img src={url} alt={`Generated image ${i+1}`} className="w-full h-auto object-cover rounded-lg aspect-video"/><a href={url} download={`${content.projectTitle.replace(/\s/g, '_')}_image_${i+1}.jpg`} className="absolute inset-0 bg-black/50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"><DocumentArrowDownIcon className="h-8 w-8 text-white"/></a></div>)}</div></div>}
+            </div>}
         </div>
     );
 };

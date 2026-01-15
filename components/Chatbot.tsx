@@ -1,96 +1,99 @@
 
-import React, { useState, useRef, useEffect } from 'react';
-import { GoogleGenAI } from '@google/genai';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { GoogleGenAI, Chat } from '@google/genai';
 import { ChatMessage } from '../types';
 import Spinner from './common/Spinner';
-import { PaperAirplaneIcon } from '@heroicons/react/24/solid';
+import { PaperAirplaneIcon, UserCircleIcon, CpuChipIcon as ModelIcon } from '@heroicons/react/24/solid';
 
 const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
-  const [loading, setLoading] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
+  const [input, setInput] = useState<string>('');
+  const [chat, setChat] = useState<Chat | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => { scrollRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => {
+    // Initializing GoogleGenAI and starting a chat
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+    const newChat = ai.chats.create({ model: 'gemini-3-flash-preview' });
+    setChat(newChat);
+  }, []);
+  
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-  const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: ChatMessage = { role: 'user', content: input };
-    setMessages(prev => [...prev, userMsg]);
+  const handleSend = useCallback(async () => {
+    if (!input.trim() || !chat || loading) return;
+
+    const userMessage: ChatMessage = { role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
     setInput('');
     setLoading(true);
+    setError(null);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-      const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
-        contents: [...messages, userMsg].map(m => ({ role: m.role, parts: [{ text: m.content }] }))
-      });
-      setMessages(prev => [...prev, { role: 'model', content: response.text || "I couldn't process that." }]);
+      // Sending message and using the .text property to extract content
+      const response = await chat.sendMessage({ message: input });
+      const modelMessage: ChatMessage = { role: 'model', content: response.text || "No response received." };
+      setMessages(prev => [...prev, modelMessage]);
     } catch (e) {
+      setError(`Error sending message: ${(e as Error).message}`);
       console.error(e);
-      setMessages(prev => [...prev, { role: 'model', content: "SYSTEM ERROR: API connection timed out. Please check your credentials." }]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [input, chat, loading]);
 
   return (
-    <div className="flex flex-col h-[calc(100vh-14rem)] max-w-4xl mx-auto">
-      <div className="flex-1 overflow-y-auto space-y-8 pb-10 pr-2 custom-scrollbar">
-        {messages.length === 0 && (
-          <div className="flex flex-col items-center justify-center h-full text-center space-y-6 animate-in zoom-in duration-500">
-            <div className="h-16 w-16 rounded-2xl bg-slate-800 flex items-center justify-center text-slate-500 float-animation">
-              <PaperAirplaneIcon className="h-8 w-8" />
+    <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight text-white">Pro AI Chatbot</h2>
+        <p className="mt-1 text-sm text-gray-400">Have a conversation with an advanced AI model. Memory is supported.</p>
+      </div>
+
+      <div className="flex-1 overflow-y-auto my-4 p-4 bg-gray-800 rounded-lg space-y-4">
+        {messages.map((msg, index) => (
+          <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+            {msg.role === 'model' && <ModelIcon className="h-8 w-8 text-gemini-blue flex-shrink-0 mt-1" />}
+            <div className={`rounded-lg p-3 max-w-lg ${msg.role === 'user' ? 'bg-gemini-blue text-white' : 'bg-gray-700'}`}>
+              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
             </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">How can I help you today?</h3>
-              <p className="text-slate-500 text-sm mt-1">Start a conversation to generate ideas, code, or content.</p>
-            </div>
-          </div>
-        )}
-        {messages.map((m, i) => (
-          <div key={i} className={`flex w-full ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] px-5 py-4 rounded-2xl text-[15px] leading-relaxed shadow-sm transition-all ${
-              m.role === 'user' 
-                ? 'bg-brand-600 text-white rounded-tr-none' 
-                : 'glass text-slate-200 border border-slate-800 rounded-tl-none'
-            }`}>
-              {m.content}
-            </div>
+             {msg.role === 'user' && <UserCircleIcon className="h-8 w-8 text-gray-400 flex-shrink-0 mt-1" />}
           </div>
         ))}
         {loading && (
-          <div className="flex justify-start">
-            <div className="glass px-5 py-4 rounded-2xl rounded-tl-none flex items-center gap-3">
-              <div className="flex gap-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:-0.3s]"></div>
-                <div className="h-1.5 w-1.5 rounded-full bg-brand-400 animate-bounce [animation-delay:-0.15s]"></div>
-                <div className="h-1.5 w-1.5 rounded-full bg-brand-400 animate-bounce"></div>
-              </div>
+            <div className="flex items-start gap-3">
+                <ModelIcon className="h-8 w-8 text-gemini-blue flex-shrink-0 mt-1" />
+                <div className="rounded-lg p-3 bg-gray-700 flex items-center">
+                    <Spinner/>
+                    <span className="text-sm ml-2">Thinking...</span>
+                </div>
             </div>
-          </div>
         )}
-        <div ref={scrollRef} />
+        <div ref={messagesEndRef} />
       </div>
+      
+      {error && <div className="rounded-md bg-red-900/50 p-4 text-sm text-red-300 mb-4">{error}</div>}
 
-      <div className="glass p-2 rounded-2xl border border-slate-800 mt-4 focus-within:border-brand-500/50 focus-within:ring-4 focus-within:ring-brand-500/10 transition-all">
-        <div className="flex items-center gap-2">
-          <input 
-            className="flex-1 bg-transparent px-4 py-3 outline-none text-white text-sm placeholder:text-slate-600" 
-            placeholder="Type your prompt here..." 
-            value={input}
-            onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && send()}
-          />
-          <button 
-            onClick={send} 
-            disabled={!input.trim() || loading}
-            className="p-3 bg-brand-600 text-white hover:bg-brand-500 disabled:opacity-30 disabled:hover:bg-brand-600 rounded-xl transition-all shadow-lg"
-          >
-            <PaperAirplaneIcon className="h-5 w-5" />
-          </button>
-        </div>
+      <div className="mt-auto flex items-center gap-2">
+        <input
+          type="text"
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
+          placeholder="Type your message..."
+          className="flex-1 block w-full rounded-md border-0 bg-white/5 p-2.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-gemini-blue sm:text-sm"
+          disabled={loading}
+        />
+        <button
+          onClick={handleSend}
+          disabled={loading || !input.trim()}
+          className="inline-flex items-center justify-center rounded-md bg-gemini-blue p-2.5 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 disabled:opacity-50"
+        >
+          <PaperAirplaneIcon className="h-5 w-5"/>
+        </button>
       </div>
     </div>
   );

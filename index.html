@@ -1,89 +1,49 @@
 
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Nexus AI | Multimodal Workspace</title>
+    <title>AI Multi-Tool Suite</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script>
       tailwind.config = {
-        darkMode: 'class',
         theme: {
           extend: {
-            fontFamily: {
-              sans: ['Inter', 'sans-serif'],
-              mono: ['JetBrains Mono', 'monospace'],
-            },
             colors: {
-              brand: {
-                50: '#f0f4ff',
-                100: '#d9e2ff',
-                200: '#bccaff',
-                300: '#8fa8ff',
-                400: '#5c76ff',
-                500: '#334aff',
-                600: '#1a27ff',
-                700: '#000fff',
-                800: '#000dd6',
-                900: '#000db1',
-              },
-              slate: {
-                950: '#020617',
-              }
+              'gemini-blue': '#1a73e8',
+              'gemini-dark': '#202124',
+              'gemini-light': '#f8f9fa',
+              'gemini-grey': '#5f6368',
+              'gemini-bg': '#1e1f22'
             }
           }
         }
       }
     </script>
     <style>
-      body {
-        background-color: #020617;
-        color: #f1f5f9;
-        -webkit-font-smoothing: antialiased;
+      @keyframes slide {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(400%); }
       }
-      .glass {
-        background: rgba(15, 23, 42, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+      .animate-\[slide_2s_ease-in-out_infinite\] {
+        animation: slide 2s ease-in-out infinite;
       }
-      .sidebar-item-active {
-        background: linear-gradient(90deg, rgba(51, 74, 255, 0.1) 0%, rgba(51, 74, 255, 0) 100%);
-        border-left: 2px solid #334aff;
-      }
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-5px); }
-        100% { transform: translateY(0px); }
-      }
-      .float-animation {
-        animation: float 3s ease-in-out infinite;
-      }
-      ::-webkit-scrollbar { width: 5px; height: 5px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: #334155; }
     </style>
-    <script type="importmap">
+  <script type="importmap">
 {
   "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
-    "react-dom": "https://aistudiocdn.com/react-dom@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "@heroicons/react/24/outline": "https://aistudiocdn.com/@heroicons/react@^2.2.0/24/outline/index.js",
-    "@heroicons/react/24/solid": "https://aistudiocdn.com/@heroicons/react@^2.2.0/24/solid/index.js",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
-    "react/": "https://esm.sh/react@^19.2.3/",
-    "@heroicons/react/": "https://esm.sh/@heroicons/react@^2.2.0/"
+    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0"
   }
 }
 </script>
-  </head>
-  <body>
+</head>
+  <body class="bg-gemini-bg text-gemini-light">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
