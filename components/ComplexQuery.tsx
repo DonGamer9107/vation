@@ -2,9 +2,10 @@
 import React, { useState, useCallback } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import Spinner from './common/Spinner';
+import { CpuChipIcon } from '@heroicons/react/24/outline';
 
 const ComplexQuery: React.FC = () => {
-  const [prompt, setPrompt] = useState<string>('Explain the theory of relativity as if I were a high school student. Use analogies to make it easier to understand.');
+  const [prompt, setPrompt] = useState<string>('Explain the quantum entanglement theory using a simple analogy of two spinning coins.');
   const [result, setResult] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,64 +20,61 @@ const ComplexQuery: React.FC = () => {
     setResult(null);
 
     try {
-      // Using pro model for complex reasoning tasks
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
         contents: prompt,
         config: {
-          // Setting the maximum thinking budget
           thinkingConfig: { thinkingBudget: 32768 }
         },
       });
-      // Accessing response text using the .text property
       setResult(response.text || "No response received.");
     } catch (e) {
-      setError(`Error processing query: ${(e as Error).message}`);
-      console.error(e);
+      setError(`Error: ${(e as Error).message}`);
     } finally {
       setLoading(false);
     }
   }, [prompt]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-4xl mx-auto">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Deep Reasoning Engine</h2>
-        <p className="mt-1 text-sm text-gray-400">Ask complex questions that require deep reasoning. This mode uses maximum "thinking" budget for higher quality responses.</p>
+        <h2 className="text-3xl font-black text-white flex items-center gap-3">
+          <CpuChipIcon className="h-10 w-10 text-blue-400" />
+          Deep Reasoning Engine
+        </h2>
+        <p className="mt-2 text-gray-400">Advanced logic processing for complex queries requiring deep thought and reasoning.</p>
       </div>
       
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="prompt-complex" className="block text-sm font-medium leading-6 text-gray-300">Your Complex Prompt</label>
+      <div className="space-y-6">
+        <div className="bg-gray-900/60 p-8 rounded-3xl border border-gray-800 shadow-xl">
+          <label className="block text-sm font-bold text-gray-500 uppercase tracking-widest mb-4">Complex Task or Inquiry</label>
           <textarea
-            id="prompt-complex"
-            rows={5}
+            rows={6}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            className="mt-2 block w-full rounded-md border-0 bg-white/5 p-2.5 text-white shadow-sm ring-1 ring-inset ring-white/10 focus:ring-2 focus:ring-inset focus:ring-gemini-blue sm:text-sm"
-            placeholder="Enter a complex question or task..."
+            className="w-full bg-gray-950 border border-gray-800 rounded-2xl p-6 text-white focus:ring-2 focus:ring-blue-500 outline-none text-lg leading-relaxed shadow-inner"
+            placeholder="Describe your complex problem..."
             disabled={loading}
           />
+          <button
+            onClick={handleQuery}
+            disabled={loading || !prompt.trim()}
+            className="w-full mt-6 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black py-4 rounded-2xl transition-all flex items-center justify-center gap-3 shadow-2xl active:scale-95 uppercase tracking-widest"
+          >
+            {loading ? <Spinner /> : <CpuChipIcon className="h-6 w-6" />}
+            {loading ? 'Thinking Deeply...' : 'Initiate Reasoning'}
+          </button>
         </div>
-
-        <button
-          onClick={handleQuery}
-          disabled={loading || !prompt.trim()}
-          className="inline-flex items-center justify-center rounded-md bg-gemini-blue px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gemini-blue disabled:opacity-50"
-        >
-          {loading && <Spinner />}
-          {loading ? 'Thinking...' : 'Submit Query'}
-        </button>
       </div>
 
-      {error && <div className="rounded-md bg-red-900/50 p-4 text-sm text-red-300">{error}</div>}
+      {error && <div className="p-4 bg-red-900/20 border border-red-900/50 text-red-300 rounded-2xl text-center">{error}</div>}
 
       {result && (
-        <div>
-          <h3 className="text-lg font-semibold text-white">Response</h3>
-          <div className="mt-2 p-4 bg-gray-800 rounded-lg prose prose-invert max-w-none">
-            <p className="whitespace-pre-wrap leading-relaxed">{result}</p>
+        <div className="animate-fadeIn">
+          <h3 className="text-sm font-black text-gray-500 uppercase tracking-widest mb-4 ml-2">Reasoning Result</h3>
+          <div className="p-8 bg-gray-800/40 border border-gray-700 rounded-3xl shadow-2xl backdrop-blur-sm">
+            <p className="text-gray-200 leading-relaxed text-lg whitespace-pre-wrap">{result}</p>
           </div>
         </div>
       )}

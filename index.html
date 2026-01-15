@@ -12,11 +12,11 @@
         theme: {
           extend: {
             colors: {
-              'gemini-blue': '#1a73e8',
-              'gemini-dark': '#202124',
-              'gemini-light': '#f8f9fa',
-              'gemini-grey': '#5f6368',
-              'gemini-bg': '#1e1f22'
+              'primary-blue': '#1a73e8',
+              'app-dark': '#202124',
+              'app-light': '#f8f9fa',
+              'app-grey': '#5f6368',
+              'app-bg': '#1e1f22'
             }
           }
         }
@@ -27,8 +27,22 @@
         0% { transform: translateX(-100%); }
         100% { transform: translateX(400%); }
       }
-      .animate-\[slide_2s_ease-in-out_infinite\] {
+      .animate-slide {
         animation: slide 2s ease-in-out infinite;
+      }
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #1e1f22;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #3c4043;
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #5f6368;
       }
     </style>
   <script type="importmap">
@@ -43,7 +57,7 @@
 }
 </script>
 </head>
-  <body class="bg-gemini-bg text-gemini-light">
+  <body class="bg-[#1e1f22] text-[#f8f9fa]">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

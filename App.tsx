@@ -3,7 +3,7 @@ import React, { useState, useCallback } from 'react';
 import { 
   ChatBubbleBottomCenterTextIcon, MagnifyingGlassIcon, CpuChipIcon, PhotoIcon, 
   PencilIcon, EyeIcon, DocumentTextIcon, MusicalNoteIcon, MicrophoneIcon, SpeakerWaveIcon, SunIcon,
-  ArrowsRightLeftIcon, BriefcaseIcon
+  ArrowsRightLeftIcon, BriefcaseIcon, SparklesIcon
 } from '@heroicons/react/24/outline';
 
 import ImageGenerator from './components/ImageGenerator';
@@ -18,72 +18,76 @@ import TextToSpeech from './components/TextToSpeech';
 import LiveChat from './components/LiveChat';
 import OfficeSuite from './components/OfficeSuite';
 import TextConverter from './components/TextConverter';
+import ProjectGenerator from './components/ProjectGenerator';
 
 type Tool = 
-  | 'Chatbot' | 'Image Generation' | 'Image Editor' | 'Image Analyzer' 
-  | 'Video Analyzer' | 'Text Converter' | 'Office Suite' | 'Web Search' | 'Complex Query' 
-  | 'Audio Transcriber' | 'Text-to-Speech' | 'Live Conversation';
+  | 'Pro Chat' | 'Image Gen' | 'Image Studio' | 'Vision AI' 
+  | 'Video AI' | 'Text Studio' | 'Office AI' | 'Smart Search' | 'Reasoning AI' 
+  | 'Transcriber' | 'Voice AI' | 'Live Voice' | 'Project Creator';
 
 const App: React.FC = () => {
-  const [activeTool, setActiveTool] = useState<Tool>('Chatbot');
+  const [activeTool, setActiveTool] = useState<Tool>('Pro Chat');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
   const tools: { name: Tool; icon: React.ElementType }[] = [
-    { name: 'Chatbot', icon: ChatBubbleBottomCenterTextIcon },
-    { name: 'Image Generation', icon: PhotoIcon },
-    { name: 'Image Editor', icon: PencilIcon },
-    { name: 'Image Analyzer', icon: EyeIcon },
-    { name: 'Video Analyzer', icon: SunIcon },
-    { name: 'Text Converter', icon: ArrowsRightLeftIcon },
-    { name: 'Office Suite', icon: BriefcaseIcon },
-    { name: 'Web Search', icon: MagnifyingGlassIcon },
-    { name: 'Complex Query', icon: CpuChipIcon },
-    { name: 'Audio Transcriber', icon: MicrophoneIcon },
-    { name: 'Text-to-Speech', icon: SpeakerWaveIcon },
-    { name: 'Live Conversation', icon: MusicalNoteIcon },
+    { name: 'Pro Chat', icon: ChatBubbleBottomCenterTextIcon },
+    { name: 'Image Gen', icon: PhotoIcon },
+    { name: 'Image Studio', icon: PencilIcon },
+    { name: 'Vision AI', icon: EyeIcon },
+    { name: 'Video AI', icon: SunIcon },
+    { name: 'Text Studio', icon: ArrowsRightLeftIcon },
+    { name: 'Office AI', icon: BriefcaseIcon },
+    { name: 'Project Creator', icon: SparklesIcon },
+    { name: 'Smart Search', icon: MagnifyingGlassIcon },
+    { name: 'Reasoning AI', icon: CpuChipIcon },
+    { name: 'Transcriber', icon: MicrophoneIcon },
+    { name: 'Voice AI', icon: SpeakerWaveIcon },
+    { name: 'Live Voice', icon: MusicalNoteIcon },
   ];
 
   const renderTool = useCallback(() => {
     switch (activeTool) {
-      case 'Chatbot': return <Chatbot />;
-      case 'Image Generation': return <ImageGenerator />;
-      case 'Image Editor': return <ImageEditor />;
-      case 'Image Analyzer': return <ImageAnalyzer />;
-      case 'Video Analyzer': return <VideoAnalyzer />;
-      case 'Text Converter': return <TextConverter />;
-      case 'Office Suite': return <OfficeSuite />;
-      case 'Web Search': return <WebSearch />;
-      case 'Complex Query': return <ComplexQuery />;
-      case 'Audio Transcriber': return <AudioTranscriber />;
-      case 'Text-to-Speech': return <TextToSpeech />;
-      case 'Live Conversation': return <LiveChat />;
+      case 'Pro Chat': return <Chatbot />;
+      case 'Image Gen': return <ImageGenerator />;
+      case 'Image Studio': return <ImageEditor />;
+      case 'Vision AI': return <ImageAnalyzer />;
+      case 'Video AI': return <VideoAnalyzer />;
+      case 'Text Studio': return <TextConverter />;
+      case 'Office AI': return <OfficeSuite />;
+      case 'Project Creator': return <ProjectGenerator />;
+      case 'Smart Search': return <WebSearch />;
+      case 'Reasoning AI': return <ComplexQuery />;
+      case 'Transcriber': return <AudioTranscriber />;
+      case 'Voice AI': return <TextToSpeech />;
+      case 'Live Voice': return <LiveChat />;
       default: return <Chatbot />;
     }
   }, [activeTool]);
 
   return (
-    <div className="flex h-screen bg-gemini-bg text-gray-200">
+    <div className="flex h-screen bg-[#1e1f22] text-gray-200 font-sans">
       {/* Sidebar */}
-      <nav className={`bg-gemini-dark transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} flex flex-col border-r border-gray-800`}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-800">
-          {isSidebarOpen && <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">AI Hub</h1>}
-          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg hover:bg-gray-700 transition-colors">
-            <BriefcaseIcon className="h-6 w-6 text-gemini-blue" />
+      <nav className={`bg-[#202124] transition-all duration-300 ${isSidebarOpen ? 'w-64' : 'w-20'} flex flex-col border-r border-gray-800 shadow-xl z-20`}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-800 h-16">
+          {isSidebarOpen && <h1 className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent truncate">AI HUB</h1>}
+          <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="p-2 rounded-lg hover:bg-gray-700 transition-colors text-blue-400">
+            <SparklesIcon className="h-6 w-6" />
           </button>
         </div>
-        <ul className="flex-1 overflow-y-auto py-4">
+        <ul className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
           {tools.map(({ name, icon: Icon }) => (
-            <li key={name} className="px-2 mb-1">
+            <li key={name}>
               <button
                 onClick={() => setActiveTool(name)}
-                className={`w-full flex items-center p-3 rounded-lg transition-all ${
+                title={!isSidebarOpen ? name : ''}
+                className={`w-full flex items-center p-3 rounded-xl transition-all duration-200 ${
                   activeTool === name 
-                    ? 'bg-gemini-blue/20 border border-gemini-blue/50 text-white shadow-lg' 
-                    : 'hover:bg-gray-800 text-gray-400 hover:text-white border border-transparent'
+                    ? 'bg-blue-600/10 border border-blue-500/30 text-white shadow-md' 
+                    : 'hover:bg-gray-800 text-gray-400 hover:text-gray-200 border border-transparent'
                 } ${!isSidebarOpen && 'justify-center'}`}
               >
-                <Icon className={`h-5 w-5 ${activeTool === name ? 'text-gemini-blue' : ''}`} />
-                {isSidebarOpen && <span className="ml-4 font-medium text-sm">{name}</span>}
+                <Icon className={`h-5 w-5 flex-shrink-0 ${activeTool === name ? 'text-blue-400' : ''}`} />
+                {isSidebarOpen && <span className="ml-4 font-medium text-sm truncate">{name}</span>}
               </button>
             </li>
           ))}
@@ -91,8 +95,8 @@ const App: React.FC = () => {
       </nav>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 md:p-8 overflow-y-auto bg-gemini-bg">
-        <div className="max-w-6xl mx-auto">
+      <main className="flex-1 overflow-y-auto bg-[#1e1f22] relative">
+        <div className="max-w-6xl mx-auto p-6 md:p-10">
           {renderTool()}
         </div>
       </main>

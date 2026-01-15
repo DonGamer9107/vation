@@ -2,7 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import Spinner from './common/Spinner';
-import { ArrowsRightLeftIcon, ChatBubbleLeftEllipsisIcon, SparklesIcon, LanguageIcon } from '@heroicons/react/24/outline';
+import { ArrowsRightLeftIcon, SparklesIcon } from '@heroicons/react/24/outline';
 
 const TextConverter: React.FC = () => {
   const [input, setInput] = useState('');
@@ -41,24 +41,24 @@ const TextConverter: React.FC = () => {
   }, [input, mode, target]);
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-8 max-w-5xl mx-auto">
       <div>
         <h2 className="text-3xl font-bold text-white flex items-center gap-3">
-          <ArrowsRightLeftIcon className="h-8 w-8 text-gemini-blue" />
-          Text Converter
+          <ArrowsRightLeftIcon className="h-10 w-10 text-blue-400" />
+          Language & Text Studio
         </h2>
-        <p className="mt-2 text-gray-400">Instantly transform your text with advanced AI-driven translation, summarization, and tone editing.</p>
+        <p className="mt-2 text-gray-400">Instantly summarize, translate, and fix your content with powerful AI transformations.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-3">
         {(['Summarize', 'Translate', 'Tone', 'Proofread'] as const).map((m) => (
           <button
             key={m}
             onClick={() => { setMode(m); if (m === 'Translate') setTarget('Spanish'); else if (m === 'Tone') setTarget('Professional'); }}
-            className={`px-4 py-2 rounded-full border text-sm font-semibold transition-all ${
+            className={`px-6 py-2.5 rounded-full border text-sm font-bold transition-all duration-300 ${
               mode === m 
-                ? 'bg-gemini-blue border-gemini-blue text-white shadow-lg' 
-                : 'bg-gray-800 border-gray-700 text-gray-400 hover:border-gray-600'
+                ? 'bg-blue-600 border-blue-500 text-white shadow-lg scale-105' 
+                : 'bg-gray-800 border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
             }`}
           >
             {m}
@@ -66,24 +66,24 @@ const TextConverter: React.FC = () => {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <label className="text-sm font-medium text-gray-300">Input Text</label>
+            <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Input Text</label>
             {(mode === 'Translate' || mode === 'Tone') && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-gray-500">{mode === 'Translate' ? 'Target Language:' : 'Tone:'}</span>
+              <div className="flex items-center gap-3 bg-gray-900/50 p-2 rounded-xl border border-gray-800">
+                <span className="text-[10px] text-gray-500 font-bold uppercase">{mode === 'Translate' ? 'Target Lang' : 'Tone'}</span>
                 <input 
                   type="text" 
                   value={target} 
                   onChange={(e) => setTarget(e.target.value)}
-                  className="bg-gray-800 border border-gray-700 rounded px-2 py-0.5 text-xs text-white outline-none focus:border-gemini-blue"
+                  className="bg-transparent border-none text-xs text-blue-400 font-bold outline-none w-24 text-right"
                 />
               </div>
             )}
           </div>
           <textarea
-            className="w-full bg-gray-800 border border-gray-700 rounded-2xl p-4 text-white focus:ring-2 focus:ring-gemini-blue outline-none min-h-[300px] resize-none"
+            className="w-full bg-gray-900/40 border border-gray-800 rounded-3xl p-6 text-white focus:ring-2 focus:ring-blue-500 outline-none min-h-[360px] resize-none shadow-inner leading-relaxed transition-all"
             placeholder="Paste your text here..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -91,20 +91,21 @@ const TextConverter: React.FC = () => {
         </div>
 
         <div className="space-y-4">
-          <label className="text-sm font-medium text-gray-300">Converted Output</label>
-          <div className="w-full bg-gray-900/50 border border-gray-700 rounded-2xl p-4 text-white min-h-[300px] overflow-y-auto relative">
+          <label className="text-sm font-bold text-gray-400 uppercase tracking-widest">Result</label>
+          <div className="w-full bg-gray-950/50 border border-gray-800 rounded-3xl p-6 text-white min-h-[360px] overflow-y-auto relative shadow-2xl">
             {loading && (
-              <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center rounded-2xl">
+              <div className="absolute inset-0 bg-gray-950/60 backdrop-blur-[2px] flex flex-col items-center justify-center rounded-3xl">
                 <Spinner />
+                <span className="text-xs font-bold text-gray-500 mt-3 animate-pulse uppercase tracking-widest">Processing</span>
               </div>
             )}
             {!output && !loading && (
-              <div className="h-full flex flex-col items-center justify-center text-gray-600 italic">
-                <SparklesIcon className="h-10 w-10 mb-2 opacity-20" />
-                <span>Result will appear here...</span>
+              <div className="h-full flex flex-col items-center justify-center text-gray-700">
+                <SparklesIcon className="h-12 w-12 mb-4 opacity-10" />
+                <span className="italic opacity-30 text-sm">Converted output will appear here</span>
               </div>
             )}
-            <div className="whitespace-pre-wrap text-gray-200 leading-relaxed">{output}</div>
+            <div className="whitespace-pre-wrap text-gray-200 leading-relaxed font-light text-base">{output}</div>
           </div>
         </div>
       </div>
@@ -113,14 +114,14 @@ const TextConverter: React.FC = () => {
         <button
           onClick={handleConvert}
           disabled={loading || !input.trim()}
-          className="px-10 py-3 bg-gemini-blue hover:bg-blue-600 disabled:opacity-50 text-white font-bold rounded-xl transition-all flex items-center gap-2 shadow-xl hover:scale-105 active:scale-95"
+          className="px-12 py-4 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white font-black rounded-2xl transition-all flex items-center gap-3 shadow-[0_10px_30px_rgba(26,115,232,0.3)] active:scale-95 uppercase tracking-widest"
         >
-          {loading ? <Spinner /> : <ArrowsRightLeftIcon className="h-5 w-5" />}
-          Convert Text
+          {loading ? <Spinner /> : <ArrowsRightLeftIcon className="h-6 w-6" />}
+          Transform Text
         </button>
       </div>
 
-      {error && <div className="p-4 bg-red-900/30 border border-red-700 text-red-300 rounded-xl">{error}</div>}
+      {error && <div className="p-4 bg-red-900/20 border border-red-900/50 text-red-300 rounded-2xl text-center">{error}</div>}
     </div>
   );
 };
