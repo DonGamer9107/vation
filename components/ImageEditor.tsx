@@ -1,6 +1,6 @@
 
 import React, { useState, useCallback, useEffect } from 'react';
-import { GoogleGenAI, Modality } from '@google/genai';
+import { GoogleGenAI } from '@google/genai';
 import { fileToBase64 } from '../utils/helpers';
 import Spinner from './common/Spinner';
 import FileUpload from './common/FileUpload';
@@ -37,6 +37,7 @@ const ImageEditor: React.FC = () => {
     setEditedImage(null);
 
     try {
+      // Create a new instance right before the call
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const base64Data = await fileToBase64(originalFile);
       
@@ -55,18 +56,18 @@ const ImageEditor: React.FC = () => {
             },
           ],
         },
-        config: {
-            responseModalities: [Modality.IMAGE],
-        },
       });
 
-      for (const part of response.candidates[0].content.parts) {
-        if (part.inlineData) {
-          const base64ImageBytes: string = part.inlineData.data;
-          const imageUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
-          setEditedImage(imageUrl);
-          return; // Exit after finding the first image part
-        }
+      // Iterate through candidates and parts to find the generated image
+      if (response.candidates?.[0]?.content?.parts) {
+          for (const part of response.candidates[0].content.parts) {
+            if (part.inlineData) {
+              const base64ImageBytes: string = part.inlineData.data;
+              const imageUrl = `data:${part.inlineData.mimeType};base64,${base64ImageBytes}`;
+              setEditedImage(imageUrl);
+              return; // Exit after finding the first image part
+            }
+          }
       }
       throw new Error("No image was returned from the API.");
     } catch (e) {
@@ -80,8 +81,8 @@ const ImageEditor: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Image Editor (Gemini 2.5 Flash Image)</h2>
-        <p className="mt-1 text-sm text-gray-400">Modify your images with simple text commands.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-white">AI Image Studio</h2>
+        <p className="mt-1 text-sm text-gray-400">Modify your images with simple text commands using advanced generative AI.</p>
       </div>
 
       <div>

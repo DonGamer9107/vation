@@ -19,15 +19,18 @@ const ComplexQuery: React.FC = () => {
     setResult(null);
 
     try {
+      // Using pro model for complex reasoning tasks
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
       const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro',
+        model: 'gemini-3-pro-preview',
         contents: prompt,
         config: {
+          // Setting the maximum thinking budget
           thinkingConfig: { thinkingBudget: 32768 }
         },
       });
-      setResult(response.text);
+      // Accessing response text using the .text property
+      setResult(response.text || "No response received.");
     } catch (e) {
       setError(`Error processing query: ${(e as Error).message}`);
       console.error(e);
@@ -39,7 +42,7 @@ const ComplexQuery: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Complex Query (Gemini 2.5 Pro with Thinking)</h2>
+        <h2 className="text-2xl font-bold tracking-tight text-white">Deep Reasoning Engine</h2>
         <p className="mt-1 text-sm text-gray-400">Ask complex questions that require deep reasoning. This mode uses maximum "thinking" budget for higher quality responses.</p>
       </div>
       
@@ -72,7 +75,9 @@ const ComplexQuery: React.FC = () => {
       {result && (
         <div>
           <h3 className="text-lg font-semibold text-white">Response</h3>
-          <div className="mt-2 p-4 bg-gray-800 rounded-lg prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: result.replace(/\n/g, '<br />') }} />
+          <div className="mt-2 p-4 bg-gray-800 rounded-lg prose prose-invert max-w-none">
+            <p className="whitespace-pre-wrap leading-relaxed">{result}</p>
+          </div>
         </div>
       )}
     </div>

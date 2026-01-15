@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import { fileToBase64 } from '../utils/helpers';
@@ -11,6 +10,7 @@ const ImageAnalyzer: React.FC = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
+  // Fix: Removed setError(null) call that was causing a 'block-scoped variable used before declaration' error.
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,8 +58,8 @@ const ImageAnalyzer: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Image Understanding (Gemini 2.5 Flash)</h2>
-        <p className="mt-1 text-sm text-gray-400">Upload an image and ask questions to understand its content.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-white">AI Vision & Understanding</h2>
+        <p className="mt-1 text-sm text-gray-400">Upload an image and ask questions to understand its content with advanced computer vision.</p>
       </div>
 
       <div>

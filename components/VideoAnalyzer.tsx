@@ -109,8 +109,8 @@ const VideoAnalyzer: React.FC = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Video Understanding (Gemini 2.5 Pro)</h2>
-        <p className="mt-1 text-sm text-gray-400">Upload a video to get insights and summaries of its content.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-white">AI Video Insights</h2>
+        <p className="mt-1 text-sm text-gray-400">Upload a video to get insights and summaries of its content using advanced AI models.</p>
       </div>
 
       <div>

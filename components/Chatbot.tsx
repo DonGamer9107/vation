@@ -14,8 +14,9 @@ const Chatbot: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Initializing GoogleGenAI and starting a chat
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
-    const newChat = ai.chats.create({ model: 'gemini-2.5-flash' });
+    const newChat = ai.chats.create({ model: 'gemini-3-flash-preview' });
     setChat(newChat);
   }, []);
   
@@ -33,8 +34,9 @@ const Chatbot: React.FC = () => {
     setError(null);
 
     try {
+      // Sending message and using the .text property to extract content
       const response = await chat.sendMessage({ message: input });
-      const modelMessage: ChatMessage = { role: 'model', content: response.text };
+      const modelMessage: ChatMessage = { role: 'model', content: response.text || "No response received." };
       setMessages(prev => [...prev, modelMessage]);
     } catch (e) {
       setError(`Error sending message: ${(e as Error).message}`);
@@ -47,8 +49,8 @@ const Chatbot: React.FC = () => {
   return (
     <div className="flex flex-col h-full max-h-[calc(100vh-4rem)]">
       <div>
-        <h2 className="text-2xl font-bold tracking-tight text-white">Chatbot (Gemini 2.5 Flash)</h2>
-        <p className="mt-1 text-sm text-gray-400">Have a conversation. The model remembers previous turns.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-white">Pro AI Chatbot</h2>
+        <p className="mt-1 text-sm text-gray-400">Have a conversation with an advanced AI model. Memory is supported.</p>
       </div>
 
       <div className="flex-1 overflow-y-auto my-4 p-4 bg-gray-800 rounded-lg space-y-4">
@@ -56,7 +58,7 @@ const Chatbot: React.FC = () => {
           <div key={index} className={`flex items-start gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
             {msg.role === 'model' && <ModelIcon className="h-8 w-8 text-gemini-blue flex-shrink-0 mt-1" />}
             <div className={`rounded-lg p-3 max-w-lg ${msg.role === 'user' ? 'bg-gemini-blue text-white' : 'bg-gray-700'}`}>
-              <p className="text-sm prose prose-invert max-w-none">{msg.content}</p>
+              <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
             </div>
              {msg.role === 'user' && <UserCircleIcon className="h-8 w-8 text-gray-400 flex-shrink-0 mt-1" />}
           </div>

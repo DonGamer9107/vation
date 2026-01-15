@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useRef } from 'react';
 import { GoogleGenAI } from '@google/genai';
 import Spinner from './common/Spinner';
@@ -41,16 +40,17 @@ const AudioTranscriber: React.FC = () => {
   const handleTranscription = useCallback(async () => {
     const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
     
-    // Simple way to convert blob to base64
+    // Convert blob to base64
     const reader = new FileReader();
     reader.readAsDataURL(audioBlob);
     reader.onloadend = async () => {
       const base64Audio = (reader.result as string).split(',')[1];
       
       try {
+        // Initializing GoogleGenAI right before the call
         const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
         const response = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-3-flash-preview',
           contents: {
             parts: [
               { text: "Transcribe this audio." },
@@ -58,7 +58,8 @@ const AudioTranscriber: React.FC = () => {
             ]
           }
         });
-        setTranscription(response.text);
+        // Accessing response text using the .text property
+        setTranscription(response.text || "Transcription failed.");
       } catch (e) {
         setError(`Error during transcription: ${(e as Error).message}`);
         console.error(e);
@@ -106,7 +107,7 @@ const AudioTranscriber: React.FC = () => {
         <div>
           <h3 className="text-lg font-semibold text-white">Transcription</h3>
           <div className="mt-2 p-4 bg-gray-800 rounded-lg prose prose-invert max-w-none">
-            <p>{transcription}</p>
+            <p className="whitespace-pre-wrap">{transcription}</p>
           </div>
         </div>
       )}

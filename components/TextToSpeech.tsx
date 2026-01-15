@@ -6,7 +6,7 @@ import Spinner from './common/Spinner';
 import { SpeakerWaveIcon, PlayCircleIcon } from '@heroicons/react/24/solid';
 
 const TextToSpeech: React.FC = () => {
-  const [text, setText] = useState<string>('Hello! I am Gemini, a large language model from Google. How can I help you today?');
+  const [text, setText] = useState<string>('Hello! I am an advanced AI assistant. How can I help you today?');
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [canPlay, setCanPlay] = useState<boolean>(false);

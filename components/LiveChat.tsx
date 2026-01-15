@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-// FIX: Removed LiveSession as it is not exported from @google/genai
+
+import React, { useState, useCallback, useRef } from 'react';
 import { GoogleGenAI, LiveServerMessage, Modality, Blob } from '@google/genai';
 import { decode, decodeAudioData, encode } from '../utils/helpers';
 import { MicrophoneIcon, StopCircleIcon } from '@heroicons/react/24/solid';
@@ -9,7 +9,7 @@ const LiveChat: React.FC = () => {
     const [error, setError] = useState<string | null>(null);
     const [status, setStatus] = useState<string>("Click Start to begin conversation");
 
-    // FIX: Changed LiveSession to any as it is not an exported type.
+    // Use any for session promise reference as LiveSession type is not exported
     const sessionPromiseRef = useRef<Promise<any> | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const outputAudioContextRef = useRef<AudioContext | null>(null);
@@ -39,17 +39,18 @@ const LiveChat: React.FC = () => {
         setError(null);
         setStatus("Initializing...");
 
-        // Initialize audio contexts
+        // Initialize audio contexts for real-time interaction
         if (!audioContextRef.current) audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
         if (!outputAudioContextRef.current) outputAudioContextRef.current = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
 
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             
+            // Re-initializing GoogleGenAI with each start to ensure up-to-date config
             const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
 
             sessionPromiseRef.current = ai.live.connect({
-                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                model: 'gemini-2.5-flash-native-audio-preview-12-2025',
                 callbacks: {
                     onopen: () => {
                         setStatus("Connection open. Start speaking.");
@@ -59,16 +60,16 @@ const LiveChat: React.FC = () => {
                         scriptProcessorRef.current.onaudioprocess = (audioProcessingEvent) => {
                             const inputData = audioProcessingEvent.inputBuffer.getChannelData(0);
                             const pcmBlob = createBlob(inputData);
-                            if (sessionPromiseRef.current) {
-                                sessionPromiseRef.current.then((session) => {
-                                    session.sendRealtimeInput({ media: pcmBlob });
-                                });
-                            }
+                            // CRITICAL: Solely rely on sessionPromise resolves to send data
+                            sessionPromiseRef.current?.then((session) => {
+                                session.sendRealtimeInput({ media: pcmBlob });
+                            });
                         };
                         mediaStreamSourceRef.current.connect(scriptProcessorRef.current);
                         scriptProcessorRef.current.connect(audioContextRef.current!.destination);
                     },
                     onmessage: async (message: LiveServerMessage) => {
+                        // Process raw audio output from the model
                         const base64Audio = message.serverContent?.modelTurn?.parts[0]?.inlineData.data;
                         if (base64Audio && outputAudioContextRef.current) {
                             nextStartTimeRef.current = Math.max(nextStartTimeRef.current, outputAudioContextRef.current.currentTime);
@@ -82,9 +83,10 @@ const LiveChat: React.FC = () => {
                             audioSourcesRef.current.add(source);
                         }
 
+                        // Stop all playback if interrupted
                         if (message.serverContent?.interrupted) {
                             for (const source of audioSourcesRef.current.values()) {
-                                source.stop();
+                                try { source.stop(); } catch(e) {}
                             }
                             audioSourcesRef.current.clear();
                             nextStartTimeRef.current = 0;
@@ -127,8 +129,8 @@ const LiveChat: React.FC = () => {
     return (
         <div className="space-y-6">
             <div>
-                <h2 className="text-2xl font-bold tracking-tight text-white">Live Conversation</h2>
-                <p className="mt-1 text-sm text-gray-400">Have a real-time voice conversation with Gemini.</p>
+                <h2 className="text-2xl font-bold tracking-tight text-white">Live AI Voice Conversation</h2>
+                <p className="mt-1 text-sm text-gray-400">Have a real-time, low-latency voice conversation with an advanced AI assistant.</p>
             </div>
             <div className="flex flex-col items-center space-y-4 p-6 bg-gray-800 rounded-lg">
                 <div className="relative flex items-center justify-center h-24 w-24">
